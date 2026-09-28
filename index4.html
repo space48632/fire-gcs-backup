@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>FIRE DRONE · 실시간 기상 아이콘 관제</title>
+  <style>
+    :root{--bg:#0c0507;--panel:#1b090c;--line:#70303a;--hot:#ff3e28;--fire:#ff7700;--gold:#ffcb55;--text:#ffe7df;--muted:#c88e91;--safe:#66e49c}
+    *{box-sizing:border-box} body{margin:0;min-height:100vh;color:var(--text);font-family:Inter,"Noto Sans KR",Arial,sans-serif;background:radial-gradient(ellipse at 50% -20%,#642116 0%,#19070b 38%,#080304 75%);overflow-x:hidden}
+    body:before,body:after{content:"";position:fixed;z-index:-1;pointer-events:none;filter:blur(10px);opacity:.8}body:before{width:55vw;height:18vh;top:-7vh;left:8vw;background:repeating-radial-gradient(ellipse at center,#ffdf66 0 3%,#ff6617 4% 7%,transparent 8% 14%);clip-path:polygon(0 100%,6% 34%,13% 83%,20% 11%,27% 70%,36% 0,44% 64%,52% 14%,60% 76%,68% 2%,77% 65%,87% 12%,94% 75%,100% 29%,100% 100%)}body:after{width:100vw;height:38vh;bottom:-28vh;left:0;background:radial-gradient(ellipse,#a81c12 0,transparent 62%)}
+    .app{max-width:1780px;margin:auto;padding:14px}.frame{border:1px solid #9f3831;box-shadow:0 0 0 1px #2f1014 inset,0 0 38px #a9211f45,0 18px 60px #000;border-radius:14px;background:linear-gradient(145deg,#2b0c0e,#100507 30%,#1c080a);overflow:hidden}
+    .topbar{min-height:112px;display:grid;grid-template-columns:1.1fr 2fr 1.1fr;gap:14px;align-items:center;padding:16px 20px;border-bottom:1px solid #84312f;background:linear-gradient(90deg,#21090c,#5d1812 50%,#21090c);position:relative}.topbar:after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:3px;background:linear-gradient(90deg,transparent,#ff4b1d 18%,#ffd060 50%,#ff4b1d 82%,transparent);box-shadow:0 0 14px #f65120}
+    .brand{display:flex;align-items:center;gap:10px;font-weight:900;letter-spacing:.06em;font-size:clamp(16px,2vw,25px)}.badge{width:39px;height:48px;border-radius:50% 50% 44% 44%;background:radial-gradient(circle at 45% 69%,#fff2a0 0 12%,#ff8b16 15% 30%,#ed271b 41%,#6e0c12 70%);clip-path:polygon(50% 0,68% 28%,90% 58%,70% 100%,30% 100%,10% 58%,32% 28%);box-shadow:0 0 19px #ff5b18;animation:flicker 2.4s infinite alternate}.sub{font-size:10px;color:#f9ad8d;letter-spacing:.22em;margin-top:4px}.weather-strip{display:grid;grid-template-columns:repeat(6,minmax(104px,1fr));gap:8px}.weather{min-width:0;border:1px solid #984038;background:#19090bce;border-radius:9px;padding:7px 10px;box-shadow:inset 0 0 18px #ff361414}.weather .label{font-size:10px;color:#d99a91;letter-spacing:.09em}.weather .value{font-size:16px;font-weight:800;margin-top:3px;white-space:nowrap}.wind{display:flex;gap:6px;align-items:center}.compass{width:31px;height:31px;border:1px solid #c75942;border-radius:50%;position:relative;flex:none;background:conic-gradient(from 0deg,#ffdf80,#651514,#ff3e28,#651514,#ffdf80)}.needle{position:absolute;left:14px;top:3px;width:2px;height:13px;background:#fff3cf;transform-origin:50% 12px;box-shadow:0 0 5px white}.status{text-align:right}.live{display:inline-flex;align-items:center;gap:7px;color:#ffe4bd;font-size:12px;font-weight:700}.pulse{width:8px;height:8px;border-radius:50%;background:#ff3c2c;box-shadow:0 0 0 0 #ff3c2caa;animation:pulse 1.4s infinite}.clock{font-family:Consolas,monospace;color:#ffbe8d;margin-top:8px;font-size:13px}
+    .grid{display:grid;grid-template-columns:310px minmax(450px,1.4fr) minmax(390px,1fr);gap:12px;padding:12px}.panel{border:1px solid #713037;border-radius:11px;background:linear-gradient(145deg,#230a0d,#120609);box-shadow:inset 0 0 24px #ff42100b;min-width:0}.panel-title{color:#ffce9d;font-size:11px;letter-spacing:.16em;font-weight:800;margin:0;padding:12px 14px 10px;border-bottom:1px solid #57242b;display:flex;align-items:center;justify-content:space-between}.panel-title:before{content:"";width:7px;height:7px;border-radius:50%;background:var(--hot);box-shadow:0 0 10px var(--hot);margin-right:8px}.panel-title span{margin-right:auto}.panel-body{padding:12px}.field{margin:0 0 11px}.field label{font-size:10px;color:#c68f91;display:block;letter-spacing:.09em;margin-bottom:4px}.field input,.url-input{width:100%;border:1px solid #6f3439;background:#0c0507;color:#ffece5;border-radius:6px;padding:9px 10px;outline:none}.field input:focus,.url-input:focus{border-color:#ff6030;box-shadow:0 0 0 2px #ff3e281e}.controls{display:grid;grid-template-columns:1fr 1fr;gap:7px}.btn{border:1px solid #9f4139;border-radius:6px;background:linear-gradient(180deg,#69211c,#351014);color:#ffe9da;font-weight:700;font-size:12px;padding:9px;cursor:pointer;transition:.18s}.btn:hover{border-color:#ffb46e;transform:translateY(-1px);box-shadow:0 0 15px #ff452b45}.btn.danger{background:linear-gradient(180deg,#c52e21,#66100e)}.btn.gold{background:linear-gradient(180deg,#b86614,#6a2d0b)}.btn.ghost{background:#1b0a0d;color:#eab9b1}.telemetry{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}.metric{padding:9px;border:1px solid #51242b;border-radius:7px;background:#100607}.metric .label{font-size:10px;color:#b77d80}.metric .number{font:700 18px Consolas,monospace;color:#ffd6b3;margin-top:3px}.risk{margin-top:13px}.riskrow{display:grid;grid-template-columns:60px 1fr 30px;gap:7px;align-items:center;margin:9px 0;font-size:11px;color:#e6b4ad}.bar{height:7px;background:#3b161a;border-radius:9px;overflow:hidden}.bar i{display:block;height:100%;border-radius:9px;background:linear-gradient(90deg,#ffbd33,#ff2c21);width:0%;transition:width .4s}.log{font:11px/1.5 Consolas,monospace;color:#d99d91;background:#0c0507;border:1px solid #4d2229;border-radius:7px;padding:9px;min-height:86px;max-height:180px;overflow:auto;white-space:pre-wrap}
+    .center{display:flex;flex-direction:column;gap:12px}.hero{min-height:270px;border:1px solid #8d3932;border-radius:10px;background:radial-gradient(ellipse at 50% 100%,#79301f 0,#2a0c0e 37%,#100507 75%);position:relative;overflow:hidden}.hero:before{content:"";position:absolute;inset:0;opacity:.7;background:linear-gradient(90deg,transparent 49.8%,#ffddbe2e 50%,transparent 50.2%),linear-gradient(0deg,transparent 49.8%,#ffddbe22 50%,transparent 50.2%),repeating-linear-gradient(90deg,transparent 0 59px,#ffbc8b0c 60px 61px),repeating-linear-gradient(0deg,transparent 0 59px,#ffbc8b0c 60px 61px)}.hero:after{content:"";position:absolute;bottom:-50px;left:16%;width:68%;height:155px;background:radial-gradient(ellipse,#ffab2c 0,#f43a1b 26%,#671312 49%,transparent 70%);filter:blur(13px);opacity:.7;animation:burn 3s ease-in-out infinite alternate}.video-empty{position:absolute;z-index:1;inset:0;display:grid;place-content:center;text-align:center;color:#ffbf9c}.drone-icon{font-size:52px;filter:drop-shadow(0 0 18px #ff4b1d);margin-bottom:10px}.video-empty b{letter-spacing:.17em;font-size:14px}.video-empty small{margin-top:6px;color:#d89587}.cross{position:absolute;z-index:2;left:50%;top:50%;width:42px;height:42px;transform:translate(-50%,-50%)}.cross:before,.cross:after{content:"";position:absolute;background:#ffd2ab;box-shadow:0 0 8px #ff4b1d}.cross:before{width:100%;height:1px;top:50%}.cross:after{height:100%;width:1px;left:50%}.tabs{display:flex;gap:6px;position:absolute;top:10px;left:10px;z-index:3}.tab{font-size:10px;color:#ffc9a4;border:1px solid #96433d;background:#2d0e10d9;border-radius:5px;padding:6px 8px}.tab.active{color:#fff1d0;border-color:#ff8b54;box-shadow:0 0 10px #ff4b1e5e}.lower{display:grid;grid-template-columns:1fr 1fr;gap:12px}.chatline{display:flex;gap:6px;margin-top:8px}.chatline input{flex:1;border:1px solid #592831;background:#0b0506;color:#fff;padding:8px;border-radius:5px}.chatline .btn{padding:7px 10px}.map-card{padding:12px;display:flex;flex-direction:column;gap:10px}.map{height:300px;border:1px solid #7c322e;border-radius:9px;overflow:hidden;position:relative;background:radial-gradient(circle at 50% 50%,#4d1a17,#100507 70%)}.map-fallback{position:absolute;inset:0;display:grid;place-content:center;text-align:center;color:#e2a69a;background:repeating-linear-gradient(0deg,transparent 0 41px,#ff794315 42px 43px),repeating-linear-gradient(90deg,transparent 0 41px,#ff794315 42px 43px)}.map-fallback b{font-size:14px;color:#ffc9a4}.map-fallback small{max-width:250px;line-height:1.55;margin-top:8px}.map.active .map-fallback{display:none}.map-tools{display:flex;gap:6px;align-items:center}.map-tools input{flex:1;padding:8px}.map-tools .btn{padding:8px 10px}.checks{display:flex;gap:7px;flex-wrap:wrap;font-size:10px;color:#e4aca2}.checks label{border:1px solid #59272d;border-radius:4px;padding:5px;background:#160708}.airspace-status{font-size:11px;color:#d4958b}.notam{border-top:1px solid #59272d;margin-top:2px;padding-top:10px}.notam-label{font-size:11px;letter-spacing:.1em;color:#ffc99d;margin-bottom:6px}.url-row{display:flex;gap:6px}.url-row .btn{white-space:nowrap;padding:8px 9px}.links{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}.links a{color:#ffb76d;font-size:10px;text-decoration:none;border-bottom:1px dotted #a94d38}.notice{font-size:10px;color:#b57d77;line-height:1.4;margin-top:7px}
+    .toast{position:fixed;right:18px;bottom:18px;max-width:360px;background:#351014;border:1px solid #ff6e45;border-radius:8px;padding:10px 13px;color:#ffe4d3;font-size:12px;box-shadow:0 8px 30px #000;transform:translateY(90px);transition:.28s;z-index:20}.toast.show{transform:translateY(0)}
+    @keyframes flicker{to{transform:scale(1.06,.93) rotate(2deg);filter:brightness(1.25)}}@keyframes pulse{70%{box-shadow:0 0 0 8px #ff3c2c00}}@keyframes burn{to{transform:translateY(-9px) scaleX(1.06);filter:blur(18px)}}@media(max-width:1180px){.topbar{grid-template-columns:1fr}.status{text-align:left}.grid{grid-template-columns:280px 1fr}.right{grid-column:1/-1}.weather-strip{max-width:850px}}@media(max-width:720px){.app{padding:5px}.grid{grid-template-columns:1fr;padding:6px}.topbar{padding:12px}.weather-strip{grid-template-columns:repeat(3,1fr)}.lower{grid-template-columns:1fr}.right{grid-column:auto}.map{height:270px}}
+
+    /* 항공기상 METAR 보조 수치: 원본 불꽃 프레임을 변경하지 않음 */
+    .kma-details{display:grid;grid-template-columns:1fr;gap:5px;margin-bottom:9px}
+    .kma-metric{min-width:0;border:1px solid #753339;background:#18080c;padding:6px 8px;border-radius:6px;display:flex;align-items:center;justify-content:space-between;gap:6px;font-size:10px;color:#e6b0a0}
+    .kma-metric b{font:700 11px Consolas,monospace;color:#ffe5ba;white-space:nowrap}
+    /* 불꽃 프레임용 동적 기상 상태 아이콘 */
+    .topbar{grid-template-columns:minmax(180px,0.9fr) minmax(610px,3fr) minmax(110px,.7fr)}
+    .wx-condition-card{display:flex;align-items:center;gap:9px;background:linear-gradient(135deg,#52200f,#19080b 80%);border-color:#e47e45;transition:background .3s,border-color .3s}
+    .wx-condition-card[data-sky="rain"],.wx-condition-card[data-sky="drizzle"]{border-color:#4ba5d1;background:linear-gradient(135deg,#11283b,#1a0b0d)}
+    .wx-condition-card[data-sky="snow"]{border-color:#c6e6ff;background:linear-gradient(135deg,#22435b,#1a0b0d)}
+    .wx-condition-card[data-sky="thunder"]{border-color:#e9ce59;background:linear-gradient(135deg,#46351b,#1a0b0d)}
+    .wx-icon{display:grid;place-items:center;min-width:47px;font-size:38px;line-height:1.1;filter:drop-shadow(0 0 10px #ffad3688);animation:weatherFloat 3s ease-in-out infinite}
+    .wx-condition-text{min-width:0}.wx-condition-text .value{font-size:14px;white-space:normal;line-height:1.1}
+    .wx-tiny{font-size:9px;color:#f9bd97;letter-spacing:0;margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .wx-bar{grid-column:1/-1;display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;font:10px Consolas,monospace;color:#eead8d;padding:0 3px}
+    .weather-strip{align-items:stretch}.weather{align-content:center;min-height:72px}
+    .weather .value{font-size:clamp(12px,1.12vw,16px)}.wind .value{font-size:clamp(12px,1vw,15px)}
+    [hidden]{display:none!important}@keyframes weatherFloat{50%{transform:translateY(-3px)}}
+    @media(max-width:1500px){.topbar{grid-template-columns:1fr}.weather-strip{max-width:none}.status{text-align:left}}
+    @media(max-width:750px){.weather-strip{grid-template-columns:repeat(3,minmax(0,1fr))}.wx-condition-card{grid-column:span 2}.weather .value{font-size:14px}}
+    @media(max-width:440px){.weather-strip{grid-template-columns:repeat(2,minmax(0,1fr))}.wx-condition-card{grid-column:span 2}}
+    @media(prefers-reduced-motion:reduce){.wx-icon{animation:none}}
+  </style>
+</head>
+<body>
+<main class="app" data-weather-ui="icons-v2"><section class="frame">
+  <header class="topbar">
+    <div class="brand"><div class="badge"></div><div>FIRE DRONE GCS<div class="sub">INTEGRATED COMMAND CENTER</div></div></div>
+    <div class="weather-strip">
+      <div class="weather wx-condition-card" id="wx-card" role="status" aria-live="polite">
+        <span class="wx-icon" id="wx-icon" aria-hidden="true">⌛</span>
+        <div class="wx-condition-text"><div class="label" id="wx-observation-type">RKSI 공항 관측</div><div class="value" id="wx-condition">기상 조회 중</div><div class="wx-tiny" id="wx-condition-source">기상청 API Hub 확인 중</div></div>
+      </div>
+      <div class="weather"><div class="label">🌡️ 기온</div><div class="value" id="wx-temp">-- °C</div></div>
+      <div class="weather"><div class="label">💧 습도</div><div class="value" id="wx-hum">-- %</div></div>
+      <div class="weather"><div class="label">◉ 기압</div><div class="value" id="wx-pressure">-- hPa</div></div>
+      <div class="weather"><div class="label">👁️ 시정</div><div class="value" id="wx-vis">-- km</div></div>
+      <div class="weather wind"><div class="compass"><i class="needle" id="wind-needle"></i></div><div><div class="label">💨 풍속 / 풍향</div><div class="value" id="wx-wind">-- m/s</div><div class="wx-tiny" id="wx-dir">풍향 --</div><div class="wx-tiny" id="wx-gust">돌풍 --</div></div></div>
+      <div class="wx-bar"><span id="wx-source">실시간 정보 연결 대기</span><span id="wx-last">관측 시각 --</span></div>
+    </div>
+    <div class="status"><div class="live"><i class="pulse"></i><span id="connection">관제 대기</span></div><div class="clock" id="clock">--:--:-- KST</div></div>
+  </header>
+  <div class="grid">
+    <aside class="panel">
+      <h2 class="panel-title"><span>DRONE CONTROL</span></h2><div class="panel-body">
+        <div class="field"><label>TELEMETRY ENDPOINT</label><input id="endpoint" value="udp:0.0.0.0:14550" aria-label="텔레메트리 endpoint"></div>
+        <div class="field" id="token-row" hidden><label>실기체 제어 토큰 (브라우저에 저장하지 않음)</label><input id="control-token" type="password" autocomplete="off" placeholder=".env의 GCS_CONTROL_TOKEN"></div>
+        <div class="notice" id="hardware-banner">기본 모드: DEMO — 실제 기체 명령 전송 안 함</div>
+        <div class="controls"><button class="btn" onclick="connectDrone()">연결 시작</button><button class="btn ghost" onclick="sendDrone('DISCONNECT')">연결 해제</button></div>
+        <div class="controls" style="margin-top:7px"><button class="btn gold" onclick="sendDrone('ARM')">시동 ARM</button><button class="btn danger" onclick="sendDrone('DISARM')">시동 해제</button><button class="btn gold" onclick="sendDrone('TAKEOFF')">이륙</button><button class="btn danger" onclick="sendDrone('LAND')">착륙</button></div>
+        <div class="telemetry"><div class="metric"><div class="label">MODE</div><div class="number" id="mode">STANDBY</div></div><div class="metric"><div class="label">BATTERY</div><div class="number" id="battery">--%</div></div><div class="metric"><div class="label">ALTITUDE</div><div class="number" id="altitude">0.0m</div></div><div class="metric"><div class="label">GPS</div><div class="number" id="gps">WAIT</div></div></div>
+        <div class="risk"><h2 class="panel-title" style="padding-left:0;border:0"><span>AI RISK SUMMARY · DEMO / 가상 수치</span></h2>
+          <div class="riskrow"><span>화염</span><div class="bar"><i id="risk-fire"></i></div><b id="risk-fire-t">0</b></div><div class="riskrow"><span>연기</span><div class="bar"><i id="risk-smoke"></i></div><b id="risk-smoke-t">0</b></div><div class="riskrow"><span>요구조자</span><div class="bar"><i id="risk-person"></i></div><b id="risk-person-t">0</b></div><div class="riskrow"><span>고온점</span><div class="bar"><i id="risk-hotspot"></i></div><b id="risk-hotspot-t">0</b></div>
+        </div>
+      </div>
+    </aside>
+    <section class="center">
+      <div class="hero"><div class="tabs"><span class="tab active">RGB LIVE</span><span class="tab">THERMAL</span><span class="tab">AI OVERLAY</span></div><div class="cross"></div><div class="video-empty"><div class="drone-icon">◈</div><b>LIVE VIDEO SIGNAL READY</b><small>VideoManager/RTSP 모듈을 연결하면 이 영역에 실시간 영상 캔버스를 연결할 수 있습니다.</small></div></div>
+      <div class="lower"><div class="panel"><h2 class="panel-title"><span>FLIGHT WEATHER (참고용) · <b id="weather-risk">CHECKING</b></span><button class="btn" style="padding:5px 7px" onclick="loadWeather(true)">갱신</button></h2><div class="panel-body"><div class="kma-details"><div class="kma-metric"><span>🌡️ 이슬점</span><b id="wx-dewpoint">-- °C</b></div><div class="kma-metric"><span>☁️ 운고 (BKN/OVC)</span><b id="wx-ceiling">-- ft</b></div><div class="kma-metric"><span>🌧️ 강수량</span><b id="wx-precip">-- mm</b></div><div class="kma-metric"><span>🛰️ 수신 시각</span><b id="wx-received">--</b></div></div><div class="log" id="weather-detail">기상청·METAR·TAF 수신 준비 중…</div><div class="notice" id="weather-action">운항 판단에 앞서 공식 기상·현장 계측·기체 제한을 확인하세요.</div></div></div><div class="panel"><h2 class="panel-title"><span>COMMAND CHAT</span></h2><div class="panel-body"><div class="log" id="chatlog">[SYSTEM] 채팅 연결 준비</div><div class="chatline"><input id="chatinput" placeholder="관제 메시지 입력" onkeydown="if(event.key==='Enter')sendChat()"><button class="btn" onclick="sendChat()">전송</button></div></div></div></div>
+    </section>
+    <aside class="panel right"><h2 class="panel-title"><span>SITUATION MAP · AIRSPACE</span></h2><div class="map-card">
+      <div class="map-tools"><input id="map-query" class="url-input" placeholder="주소 또는 장소 검색"><button class="btn" onclick="searchPlace()">검색</button><button class="btn ghost" onclick="goHome()">청라</button></div>
+      <div class="checks"><label><input class="layer" type="checkbox" value="prohibited" checked> 금지</label><label><input class="layer" type="checkbox" value="restricted" checked> 제한</label><label><input class="layer" type="checkbox" value="control" checked> 관제</label><label><input class="layer" type="checkbox" value="danger"> 위험</label><label><input class="layer" type="checkbox" value="military"> 군작전</label><label><input class="layer" type="checkbox" value="ua"> 초경량</label><label><input class="layer" type="checkbox" value="consult"> 사전협의</label><button class="btn" style="padding:4px 7px" onclick="refreshAirspace()">공역 갱신</button></div>
+      <div class="airspace-status" id="airspace-status">지도 연결 준비 중…</div><div class="map" id="map"><div class="map-fallback"><b>카카오맵 연결 대기</b><small>`.env`의 KAKAO_JAVASCRIPT_KEY를 넣고 카카오 개발자 콘솔에 현재 도메인을 등록하면 실제 지도가 표시됩니다.</small></div></div>
+      <div class="notam"><div class="notam-label">NOTAM / 항공고시보 URL</div><div class="url-row"><input class="url-input" id="notam-url" aria-label="NOTAM URL"><button class="btn" onclick="openNotam()">열기</button><button class="btn ghost" onclick="saveNotam()">저장</button></div><div class="links"><a id="link-notam" target="_blank" rel="noopener">공식 NOTAM</a><a id="link-pib" target="_blank" rel="noopener">PIB 비행전 정보</a><a id="link-aip" target="_blank" rel="noopener">대한민국 e-AIP</a><a id="link-amo" target="_blank" rel="noopener">항공기상</a></div><div class="notice">NOTAM과 비행금지구역은 최종 비행 전 공식 항공정보로 재확인해야 합니다.</div></div>
+    </div></aside>
+  </div>
+</section></main><div id="toast" class="toast"></div>
+<script>
+let CONFIG={}, MAP=null, GEOCODER=null, POLYGONS=[], DRONE=null, CHAT=null, WEATHER_LOCATION=null, WX_BUSY=false;
+const $=id=>document.getElementById(id), fmt=(v,s='',digits=1)=>v===null||v===undefined||v===''?'--':`${Number(v).toFixed(digits)}${s}`;
+function toast(message){const t=$('toast');t.textContent=message;t.classList.add('show');clearTimeout(window.toastTimer);window.toastTimer=setTimeout(()=>t.classList.remove('show'),3300)}
+function clock(){ $('clock').textContent=new Intl.DateTimeFormat('ko-KR',{timeZone:'Asia/Seoul',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).format(new Date())+' KST'}
+async function boot(){clock();setInterval(clock,1000);try{const cfgResponse=await fetch('/api/config/client',{cache:'no-store'});if(!cfgResponse.ok)throw new Error('HTTP '+cfgResponse.status);CONFIG=await cfgResponse.json();setLinks();$('notam-url').value=localStorage.getItem('fire-drone-notam-url')||CONFIG.notam_default_url;}catch(e){toast('설정 수신 오류: '+e.message)}loadWeather();setInterval(()=>loadWeather(false),CONFIG.weather_poll_ms||60000);loadKakao().catch(e=>toast('지도 초기화 오류: '+e.message));connectChat();if(CONFIG.hardware_enabled){$('token-row').hidden=false;$('hardware-banner').textContent='실기체 모드 · 토큰 인증 후에만 제어';}else{$('mode').textContent='DEMO';}setInterval(mockRisk,1300);document.querySelectorAll('.layer').forEach(x=>x.addEventListener('change',refreshAirspace))}
+function setLinks(){const links=CONFIG.official_links||{};[['link-notam','korea_notam'],['link-pib','korea_pib'],['link-aip','korea_aip'],['link-amo','kma_aviation']].forEach(([id,key])=>{$(id).href=links[key]||'#'})}
+function loadKakao(){return new Promise(resolve=>{if(!CONFIG.kakao_javascript_key){$('airspace-status').textContent='KAKAO_JAVASCRIPT_KEY 미설정 · 지도는 안전 대기 상태입니다.';return resolve()}const s=document.createElement('script');s.src='https://dapi.kakao.com/v2/maps/sdk.js?autoload=false&libraries=services&appkey='+encodeURIComponent(CONFIG.kakao_javascript_key);s.onload=()=>window.kakao.maps.load(()=>{initMap();resolve()});s.onerror=()=>{toast('카카오맵 SDK 로드 실패');resolve()};document.head.appendChild(s)})}
+function initMap(){const p=CONFIG.default_location||{lat:37.4563,lon:126.7052};MAP=new kakao.maps.Map($('map'),{center:new kakao.maps.LatLng(p.lat,p.lon),level:7});GEOCODER=new kakao.maps.services.Places();$('map').classList.add('active');$('airspace-status').textContent='카카오맵 연결 완료 · 공역 데이터를 불러오는 중';kakao.maps.event.addListener(MAP,'idle',()=>{clearTimeout(window.airTimer);window.airTimer=setTimeout(refreshAirspace,350)});refreshAirspace()}
+function goHome(){WEATHER_LOCATION=null;loadWeather(true);if(MAP){const p=CONFIG.default_location;MAP.setCenter(new kakao.maps.LatLng(p.lat,p.lon));MAP.setLevel(7)}}
+function searchPlace(){if(!GEOCODER)return toast('카카오맵 키를 설정한 뒤 검색할 수 있습니다.');const q=$('map-query').value.trim();if(!q)return;GEOCODER.keywordSearch(q,(rows,status)=>{if(status===kakao.maps.services.Status.OK&&rows[0]){const x=rows[0];MAP.setCenter(new kakao.maps.LatLng(x.y,x.x));MAP.setLevel(4);new kakao.maps.Marker({map:MAP,position:new kakao.maps.LatLng(x.y,x.x),title:x.place_name});WEATHER_LOCATION={lat:Number(x.y),lon:Number(x.x),icao:CONFIG.default_location?.icao||'RKSI'};loadWeather(true);}else toast('장소를 찾지 못했습니다.')})}
+function clearAirspace(){POLYGONS.forEach(p=>p.setMap(null));POLYGONS=[]}
+function drawGeometry(g,color){if(!g||!MAP)return;const draw=ring=>{const p=new kakao.maps.Polygon({map:MAP,path:ring.map(x=>new kakao.maps.LatLng(x[1],x[0])),strokeWeight:2,strokeColor:color||'#ff3e28',strokeOpacity:.9,fillColor:color||'#ff3e28',fillOpacity:.18});POLYGONS.push(p)};if(g.type==='Polygon')draw(g.coordinates[0]);if(g.type==='MultiPolygon')g.coordinates.forEach(p=>p[0]&&draw(p[0]))}
+async function refreshAirspace(){if(!MAP)return;try{const b=MAP.getBounds(),sw=b.getSouthWest(),ne=b.getNorthEast(),layers=[...document.querySelectorAll('.layer:checked')].map(x=>x.value);if(!layers.length){clearAirspace();$('airspace-status').textContent='선택된 공역 레이어가 없습니다.';return}const qs=new URLSearchParams({min_lon:sw.getLng(),min_lat:sw.getLat(),max_lon:ne.getLng(),max_lat:ne.getLat(),layers:layers.join(',')});const d=await fetch('/api/airspace/geojson?'+qs).then(r=>r.json());clearAirspace();(d.features||[]).forEach(f=>drawGeometry(f.geometry,f.properties?._gcs_color));const bad=(d.meta?.sources||[]).filter(s=>!s.ok);$('airspace-status').textContent=`공역 ${d.features?.length||0}건 표시`+(bad.length?' · '+bad.map(x=>x.message).join(' / '):'');}catch(e){$('airspace-status').textContent='공역 불러오기 오류: '+e.message}}
+const WX_ICONS={"clear-day":"☀️","clear-night":"🌙","partly-cloudy":"🌤️",cloudy:"☁️",fog:"🌫️",drizzle:"🌦️",rain:"🌧️",snow:"🌨️",thunder:"⛈️",unknown:"❔"};
+function wxReset(message){
+  $('wx-icon').textContent='❔';$('wx-condition').textContent='수신 실패';
+  $('wx-observation-type').textContent='기상 관측';$('wx-condition-source').textContent='상태 확인 필요';
+  $('wx-card').dataset.sky='unknown';
+  ['wx-temp','wx-hum','wx-pressure','wx-vis','wx-wind','wx-dewpoint','wx-ceiling','wx-precip','wx-received'].forEach(id=>$(id).textContent='--');
+  $('wx-gust').textContent='돌풍 --';$('wx-dir').textContent='풍향 --';$('wind-needle').style.opacity='.25';$('wx-source').textContent='데이터 없음';
+  $('wx-last').textContent='관측 시각 --';$('weather-risk').textContent='UNKNOWN';
+  $('weather-risk').style.color='#ffc96c';$('weather-detail').textContent=message;
+  $('weather-action').textContent='기상 수신 실패. 공식 기상·현장 계측 확인';
+}
+function wxTime(raw){
+  if(raw===null||raw===undefined)return '미제공';
+  let d=typeof raw==='number'?new Date(raw*1000):new Date(raw);
+  if(Number.isNaN(d.getTime()))return String(raw);
+  return new Intl.DateTimeFormat('ko-KR',{timeZone:'Asia/Seoul',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}).format(d)+' KST';
+}
+async function loadWeather(force=false){
+  if(WX_BUSY)return;WX_BUSY=true;
+  try{
+    const p=WEATHER_LOCATION||CONFIG.default_location||{lat:37.4563,lon:126.7052,icao:'RKSI'};
+    const q=new URLSearchParams({lat:p.lat,lon:p.lon,icao:p.icao||'RKSI',force_refresh:force});
+    const response=await fetch('/api/weather/current?'+q,{cache:'no-store'});
+    if(!response.ok)throw new Error('HTTP '+response.status);
+    const w=await response.json(),d=w.display_weather||w,c=d.condition||w.condition||{};
+    const icon=WX_ICONS[c.icon]||WX_ICONS.unknown;
+    $('wx-icon').textContent=icon;$('wx-condition').textContent=c.label||'기상 미확인';
+    $('wx-condition-source').textContent=c.source||d.source||'기상현상 미확인';
+    $('wx-card').dataset.sky=c.icon||'unknown';
+    const station=d.station_type==='airport';
+    $('wx-observation-type').textContent=station?`${d.location_label||w.airport_icao} · METAR`:'지도 좌표 · 추정 기상';
+    $('wx-temp').textContent=fmt(d.temperature,' °C');
+    $('wx-hum').textContent=fmt(d.humidity,' %',0);
+    $('wx-hum').parentElement.querySelector('.label').textContent=station&&d.humidity_is_derived?'💧 습도 (계산값)':'💧 습도';
+    $('wx-pressure').textContent=fmt(d.pressure,' hPa',0);
+    $('wx-vis').textContent=fmt(d.visibility_km,' km');
+    $('wx-wind').textContent=fmt(d.wind_speed,' m/s');
+    $('wx-gust').textContent='돌풍 '+fmt(d.wind_gusts,' m/s');
+    $('wx-dir').textContent='풍향 '+fmt(d.wind_direction,'°',0);$('wind-needle').style.opacity=d.wind_direction===null||d.wind_direction===undefined?'.25':'1';$('wind-needle').style.transform=`rotate(${Number(d.wind_direction)||0}deg)`;
+    $('wx-dewpoint').textContent=fmt(d.dewpoint,' °C');
+    $('wx-ceiling').textContent=fmt(d.ceiling_ft,' ft',0);
+    $('wx-precip').textContent=fmt(d.precipitation_mm,' mm');
+    $('wx-received').textContent=wxTime(w.updated_at);
+    $('wx-source').textContent=(d.location_label||'좌표 기상')+' · '+(d.source||'데이터 출처 미확인');
+    const obs=d.observed_at||c.observed_at;
+    $('wx-last').textContent='관측 '+wxTime(obs)+(w.cached?' · 서버 캐시':'');
+    const age=obs?Date.now()-new Date(obs).getTime():NaN;
+    const stale=!obs||!Number.isFinite(age)||age>2*60*60*1000;
+    if(stale){$('wx-last').textContent+=' · 관측 시각 미확인/지연';$('wx-last').style.color='#ff7c55';}
+    else $('wx-last').style.color='';
+    const risk=w.risk||{};$('weather-risk').textContent=stale?'TIME CHECK':risk.level||'UNKNOWN';
+    $('weather-risk').style.color=stale?'#ffcc54':risk.level==='HIGH'?'#ff4a36':risk.level==='CAUTION'?'#ffcc54':risk.level==='NORMAL'?'#74e7a0':'#ffcf81';
+    const sources=(w.sources||[]).map(x=>x.name+': '+(x.ok?'수신':x.message)).join(' / ');
+    const airport=w.airport_weather||{}, taf=w.airport_forecast||{};
+    const airCondition=airport.condition?.label||'현상 미확인';
+    const meta=station?'상단은 RKSI 공항 관측값입니다. 현재 지도 좌표의 기상과 다를 수 있습니다.':'상단은 지도 좌표의 추정 기상입니다. RKSI 관측과 다릅니다.';
+    $('weather-detail').textContent=`${meta}
+관측 ${wxTime(obs)} · 조회 ${wxTime(w.updated_at)}
+관측 출처 ${sources}
+
+공항 ${w.airport_icao||'--'} · ${airport.message_type||'METAR/SPECI'}
+현상 ${airCondition}; 기온 ${fmt(airport.temperature,'°C')}; 이슬점 ${fmt(airport.dewpoint,'°C')}
+풍향 ${fmt(airport.wind_direction,'°',0)}; 풍속 ${fmt(airport.wind_speed,' m/s')}; 돌풍 ${fmt(airport.wind_gusts,' m/s')}
+시정 ${fmt(airport.visibility_km,' km')}; 운고 ${fmt(airport.ceiling_ft,' ft',0)}; QNH ${fmt(airport.pressure,' hPa',0)}
+현상코드 ${(airport.weather_codes||[]).join(', ')||'미제공'} / 구름 ${(airport.cloud_codes||[]).join(', ')||'미제공'}
+기상청 원문 ${w.metar_raw||'IWXXM 구조화 응답 (문자 전문 미제공 가능)'}
+
+TAF 예보 발행 ${wxTime(taf.issued_at)} · ${taf.source||'미수신'}
+기본 예보: 풍속 ${fmt(taf.wind_speed,' m/s')}, 시정 ${fmt(taf.visibility_km,' km')}
+${w.taf_raw||taf.note||'TAF 미수신'}
+
+좌표 ${Number(p.lat).toFixed(4)}, ${Number(p.lon).toFixed(4)} · 현장 기상과 다를 수 있음`;
+    $('weather-action').textContent=(stale?'⚠️ 관측시각 미확인 또는 오래됨 · ':'')+
+      (risk.action||'실제 운항은 공식 기상·현장 계측·기체 제한 확인 후 판단');
+  }catch(e){wxReset('기상 수신 오류: '+e.message)}finally{WX_BUSY=false}
+}
+function connectDrone(){
+  if(DRONE&&(DRONE.readyState===1||DRONE.readyState===0))return;
+  DRONE=new WebSocket((location.protocol==='https:'?'wss://':'ws://')+location.host+'/ws/drone');
+  DRONE.onopen=()=>{
+    $('connection').textContent=CONFIG.hardware_enabled?'제어 인증 중':'데모 관제 연결';
+    if(CONFIG.hardware_enabled){const token=$('control-token').value;if(!token){toast('제어 토큰이 없습니다');DRONE.close();return}DRONE.send('AUTH:'+token)}
+    else DRONE.send('CONNECT:'+$('endpoint').value);
+  };
+  DRONE.onmessage=e=>{try{const m=JSON.parse(e.data),d=m.data||{};
+    if(m.type==='AUTH'){if(d.ok){DRONE.send('CONNECT:'+$('endpoint').value);toast('제어 인증 통과')}else toast('제어 인증 실패')}
+    if(m.type==='STATUS'){$('mode').textContent=d.mode||'UNKNOWN';$('connection').textContent=d.hardware?'실기체 관제':'데모 관제 연결'}
+    if(m.type==='COMMAND_ACK')toast((d.accepted?'전송 시도: ':'미전송: ')+d.command+(d.message?' · '+d.message:''));
+    if(m.type==='ERROR')toast('관제 오류: '+(d.message||''));
+    if(m.type==='SYSTEM')toast(d.message||'관제 알림');
+  }catch(err){console.error('관제 메시지 해석 오류',err)}};
+  DRONE.onclose=()=>{$('connection').textContent='관제 대기';DRONE=null};
+}
+function sendDrone(command){
+  if(!DRONE||DRONE.readyState!==1){if(command!=='DISCONNECT')toast('먼저 관제 연결을 시작하세요');return}
+  if(CONFIG.hardware_enabled&&['ARM','TAKEOFF'].includes(command)&&!window.confirm(command+' 명령을 실제 기체에 전달하시겠습니까? 기체 상태를 먼저 확인하세요.'))return;
+  DRONE.send(command);
+  if(command==='DISCONNECT'){setTimeout(()=>{if(DRONE?.readyState===1)DRONE.close()},250)}
+}
+
+function connectChat(){CHAT=new WebSocket((location.protocol==='https:'?'wss://':'ws://')+location.host+'/ws/chat');CHAT.onopen=()=>{$('chatlog').textContent+='\n[SYSTEM] 채팅 연결됨'};CHAT.onmessage=e=>{$('chatlog').textContent+='\n'+e.data;$('chatlog').scrollTop=$('chatlog').scrollHeight};CHAT.onclose=()=>setTimeout(connectChat,2500)}function sendChat(){const x=$('chatinput');if(x.value.trim()&&CHAT?.readyState===1){CHAT.send('[CMD] '+x.value.trim());x.value=''}}
+function mockRisk(){[['fire',5,32],['smoke',8,36],['person',58,92],['hotspot',18,51]].forEach(([key,a,b])=>{const v=Math.floor(a+Math.random()*(b-a));$('risk-'+key).style.width=v+'%';$('risk-'+key+'-t').textContent=v})}
+function saveNotam(){const v=$('notam-url').value.trim();try{const u=new URL(v);if(!/^https?:$/.test(u.protocol))throw 0;localStorage.setItem('fire-drone-notam-url',v);toast('NOTAM URL을 이 브라우저에 저장했습니다.')}catch{toast('http 또는 https 주소를 입력하세요.')}}function openNotam(){saveNotam();const v=$('notam-url').value.trim();try{window.open(new URL(v).href,'_blank','noopener')}catch{toast('유효한 NOTAM URL이 아닙니다.')}}
+document.addEventListener('DOMContentLoaded',boot);
+</script>
+</body></html>
